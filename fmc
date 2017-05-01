@@ -1,0 +1,94 @@
+#!/usr/bin/env zsh
+# fmc: https://github.com/0ax1/fmc
+
+# Echos the revision range to inspect. In case the current branch is not master,
+# the range is given by the common ancestor with master and the current branch's
+# HEAD. Otherwise, all commits of master are taken into account.
+rev_range() {
+    if [[ `git rev-parse --abbrev-ref HEAD` != "master" ]]; then
+        echo "`git merge-base HEAD master`..HEAD"
+    else
+        echo "HEAD"
+    fi
+}
+
+# Echos the hunk range in the format: [git-blame range, end-line].
+hunk_range() {
+    # Hunk format: @@ -del[,line_count] +add[,line_count] @@
+    ranges=(`echo $1 | grep -oE '[0-9]*,?[0-9]*'`)
+    last_lines=(`echo $ranges | sed 's/,/\+/g'`)
+
+    # Zsh array starts with 1.
+    (( last_line_add = $last_lines[1] ))
+    (( last_line_sub = $last_lines[2] ))
+
+    # Format range for git blame: x[,+y].
+    ranges=(`echo $ranges | sed s/,/,\+/g`)
+
+    if [[ $last_line_add -gt $last_line_sub ]]; then
+        echo "$ranges[1] $last_line_add"
+    else
+        echo "$ranges[2] $last_line_sub"
+    fi
+}
+
+# List the four latest unique matching commits prefixed with 'L '.
+line_candidates() {
+    # Iterate files which have been modified.
+    (for file in `git diff --name-only --staged --diff-filter=M`; do
+        last_line=`git show HEAD:$file | wc -l`
+
+        # Hunk format: @@ -del[,line_count] +add[,line_count] @@
+        for hunk in "`git diff --staged -U0 "$file" | grep -E '^@@ '`"; do
+            range=(`hunk_range $hunk`)
+
+            # Check for appended lines which cannot be blamed.
+            if [[ $range[2] -le $last_line ]]; then
+                git blame -sl --no-progress -L $range[1] `rev_range` -- "$file"
+            fi
+        done
+        # Get the commit hash, remove the ^ from initial commits, prefix the
+        # line with 'L ', only output unique entries and limit them to four.
+    done) | cut -d ' ' -f 1 | sed 's/\^//' | sed 's/^/L /g' | \
+            awk '!seen[$0]++' | head -4
+}
+
+# List the four latest matching commits modifying the files prefixed with 'F '.
+file_candidates() {
+    # Iterate files which have been modified.
+    (for file in `git diff --name-only --staged --diff-filter=M`; do
+        git rev-list -n 4 -E `rev_range` -- "$file"
+    done) | sed 's/^/F /g' | head -4
+}
+
+# Output a formatted log of the match type and commit info.
+print_candidate() {
+    # Abbreviate the commit hash to its minimal required length.
+    unique_len=`git rev-parse --short HEAD | awk '{print length}'`
+    git --no-pager log --format="%h |$1| %s - %an" --abbrev=$unique_len -n 1 $2
+}
+
+# List all candidate commits.
+list_all_candidates() {
+    if git diff --cached --quiet; then
+        echo 'No staged changes.' >&2
+        exit 1
+    fi
+
+    # Cd to the repo's top-level directory.
+    cd "`git rev-parse --show-toplevel`"
+
+    # Only take file candidates into account if no line candidates are found.
+    (L=`line_candidates`
+     if [[ ! -z $L ]]; then
+         echo $L
+     else
+         file_candidates
+     fi) | while read candidate; do
+        # Convert the candidate into an array of [match type, commit].
+        candidate=(`echo "$candidate"`)
+        print_candidate $candidate[1] $candidate[2]
+    done
+}
+
+list_all_candidates
