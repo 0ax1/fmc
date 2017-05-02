@@ -67,7 +67,7 @@ file_candidates() {
     # Iterate files which have been modified.
     (for file in `git diff --name-only --staged --diff-filter=M`; do
         git rev-list -n 4 -E `rev_range` -- "$file"
-    done) | sed 's/^/F /g' | head -4
+    done) | sed 's/^/F /g' | awk '!seen[$0]++' | head -4
 }
 
 # Output a formatted log of the match type and commit info.
