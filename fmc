@@ -12,23 +12,28 @@ rev_range() {
     fi
 }
 
-# Echos the hunk range in the format: [git-blame range, end-line].
+# Echos the hunk range in the format: [start-line, end-line].
 hunk_range() {
     # Hunk format: @@ -del[,line_count] +add[,line_count] @@
-    ranges=(`echo $1 | grep -oE '[0-9]*,?[0-9]*'`)
-    last_lines=(`echo $ranges | sed 's/,/\+/g'`)
+    first_lines=(`echo $1 | grep -oE '[,0-9]*' | sed 's/,[0-9]*//g'`)
+    last_lines=(`echo $1  | grep -oE '[,0-9]*' | sed 's/,/\+/g'`)
 
-    # Zsh array starts with 1.
-    (( last_line_add = $last_lines[1] ))
-    (( last_line_sub = $last_lines[2] ))
+    # Last lines are calculated as (start + count - 1).
+    (( last_lines[1] = $last_lines[1] ))
+    # Check if the line count was zero or empty.
+    if [[ $last_lines[1] -gt $first_lines[1] ]]; then
+        (( last_lines[1] -= 1 ))
+    fi
 
-    # Format range for git blame: x[,+y].
-    ranges=(`echo $ranges | sed s/,/,\+/g`)
+    (( last_lines[2] = $last_lines[2] ))
+    if [[ $last_lines[2] -gt $first_lines[2] ]]; then
+        (( last_lines[2] -= 1 ))
+    fi
 
-    if [[ $last_line_add -gt $last_line_sub ]]; then
-        echo "$ranges[1] $last_line_add"
+    if [[ $last_lines[1] -gt $last_lines[2] ]]; then
+        echo "$first_lines[1] $last_lines[1]"
     else
-        echo "$ranges[2] $last_line_sub"
+        echo "$first_lines[2] $last_lines[2]"
     fi
 }
 
@@ -44,7 +49,8 @@ line_candidates() {
 
             # Check for appended lines which cannot be blamed.
             if [[ $range[2] -le $last_line ]]; then
-                git blame -sl --no-progress -L $range[1] `rev_range` -- "$file"
+                range="$range[1],$range[2]"
+                git blame -sl --no-progress -L $range `rev_range` -- "$file"
             fi
         done
         # Get the commit hash, remove the ^ from initial commits, prefix the
