@@ -19,7 +19,7 @@ hunk_range() {
     last_lines=(`echo $1  | grep -oE '[,0-9]*' | sed 's/,/\+/g'`)
 
     for i (1 2); do
-        # Calculated last lines as (start + count - 1).
+        # Calculate last line as (start + count - 1).
         (( last_lines[i] = last_lines[i] ))
         # Check if the line count was zero or empty.
         if [[ $last_lines[$i] -gt $first_lines[$i] ]]; then
