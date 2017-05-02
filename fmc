@@ -1,7 +1,7 @@
 #!/usr/bin/env zsh
 # fmc: https://github.com/0ax1/fmc
 
-# Echos the revision range to inspect. In case the current branch is not master,
+# Echo the revision range to inspect. In case the current branch is not master,
 # the range is given by the common ancestor with master and the current branch's
 # HEAD. Otherwise, all commits of master are taken into account.
 rev_range() {
@@ -12,7 +12,7 @@ rev_range() {
     fi
 }
 
-# Echos the hunk range in the format: [start-line, end-line].
+# Echo the hunk range in the format: [start-line, end-line].
 hunk_range() {
     # Hunk format: @@ -del[,line_count] +add[,line_count] @@
     first_lines=(`echo $1 | grep -oE '[,0-9]*' | sed 's/,[0-9]*//g'`)
