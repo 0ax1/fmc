@@ -39,7 +39,7 @@ line_candidates() {
         last_line=`git show HEAD:$file | wc -l`
 
         # Hunk format: @@ -del[,line_count] +add[,line_count] @@
-        for hunk in "`git diff --staged -U0 "$file" | grep -E '^@@ '`"; do
+        for hunk in "`git diff --staged -U0 \"$file\" | grep -E '^@@ '`"; do
             range=(`hunk_range $hunk`)
 
             # Check for appended lines which cannot be blamed.
