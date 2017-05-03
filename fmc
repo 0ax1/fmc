@@ -47,16 +47,14 @@ line_candidates() {
             # Check for appended lines which cannot be blamed.
             if [[ $range[2] -le $last_line ]]; then
                 range="$range[1],$range[2]"
-                git blame -sl --no-progress -L $range `rev_range` -- "$file"
+                git blame -s -b --no-progress -L $range `rev_range` -- "$file"
             elif [[ $range[1] -le $last_line ]]; then
                 range="$range[1],$last_line"
-                git blame -sl --no-progress -L $range `rev_range` -- "$file"
+                git blame -s -b --no-progress -L $range `rev_range` -- "$file"
             fi
         done
-        # Get the commit hash, remove the ^ from initial commits, prefix the
-        # line with 'L ', only output unique entries and limit them to four.
-    done) | cut -d ' ' -f 1 | sed 's/\^//' | sed 's/^/L /g' | \
-            awk '!seen[$0]++' | head -4
+        # Get the commit hash and prefix the line with 'L '.
+    done) | grep -oE '^[a-z0-9]*' | sed 's/^/L /' | awk '!seen[$0]++' | head -4
 }
 
 # List the four latest matching commits modifying the files prefixed with 'F '.
