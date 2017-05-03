@@ -54,7 +54,7 @@ line_candidates() {
             fi
         done
         # Get the commit hash and prefix the line with 'L '.
-    done) | grep -oE '^[a-z0-9]*' | sed 's/^/L /' | awk '!seen[$0]++' | head -4
+    done) | grep -oE '^[a-z0-9]*' | sed 's/^/L /'
 }
 
 # List the four latest matching commits modifying the files prefixed with 'F '.
@@ -62,7 +62,7 @@ file_candidates() {
     # Iterate files which have been modified.
     (for file in `git diff --name-only --staged --diff-filter=M`; do
         git rev-list -n 4 -E `rev_range` -- "$file"
-    done) | sed 's/^/F /g' | awk '!seen[$0]++' | head -4
+    done) | sed 's/^/F /'
 }
 
 # Output a formatted log of the match type and commit info.
@@ -84,13 +84,13 @@ list_all_candidates() {
 
     # Only take file candidates into account if no line candidates are found.
     l_candidates=`line_candidates`
-    (if [[ ! -z $l_candidates ]]; then
+    ((if [[ ! -z $l_candidates ]]; then
          echo $l_candidates
      else
          file_candidates
      fi) | while read match_type commit_sha; do
         print_candidate $match_type $commit_sha
-    done
+    done) | awk '!seen[$1]++' | head -4
 }
 
 list_all_candidates
