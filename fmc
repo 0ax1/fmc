@@ -85,15 +85,13 @@ list_all_candidates() {
     cd "`git rev-parse --show-toplevel`"
 
     # Only take file candidates into account if no line candidates are found.
-    (L=`line_candidates`
-     if [[ ! -z $L ]]; then
-         echo $L
+    l_candidates=`line_candidates`
+    (if [[ ! -z $l_candidates ]]; then
+         echo $l_candidates
      else
          file_candidates
-     fi) | while read candidate; do
-        # Convert the candidate into an array of [match type, commit].
-        candidate=(`echo "$candidate"`)
-        print_candidate $candidate[1] $candidate[2]
+     fi) | while read match_type commit_sha; do
+        print_candidate $match_type $commit_sha
     done
 }
 
