@@ -15,8 +15,9 @@ rev_range() {
 # Echo the hunk range in the format: [start-line, end-line].
 hunk_range() {
     # Hunk format: @@ -del[,line_count] +add[,line_count] @@
-    local readonly first_lines=(`echo $1 | grep -oE '[,0-9]*' | sed 's/,[0-9]*//g'`)
-    local last_lines=(`echo $1 | grep -oE '[,0-9]*' | sed 's/,/\+/g'`)
+    local preprocess() { echo $1 | grep -oE '[,0-9]*' }
+    local readonly first_lines=(`preprocess $1 | sed 's/,[0-9]*//g'`)
+    local last_lines=(`preprocess $1 | sed 's/,/\+/g'`)
 
     for i (1 2); do
         # Calculate last line as (start + count - 1).
