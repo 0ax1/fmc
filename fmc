@@ -15,8 +15,8 @@ rev_range() {
 # Echo the hunk range in the format: [start-line, end-line].
 hunk_range() {
     # Hunk format: @@ -del[,line_count] +add[,line_count] @@
-    first_lines=(`echo $1 | grep -oE '[,0-9]*' | sed 's/,[0-9]*//g'`)
-    last_lines=(`echo $1  | grep -oE '[,0-9]*' | sed 's/,/\+/g'`)
+    local readonly first_lines=(`echo $1 | grep -oE '[,0-9]*' | sed 's/,[0-9]*//g'`)
+    local last_lines=(`echo $1 | grep -oE '[,0-9]*' | sed 's/,/\+/g'`)
 
     for i (1 2); do
         # Calculate last line as (start + count - 1).
@@ -38,11 +38,11 @@ hunk_range() {
 line_candidates() {
     # Iterate files which have been modified.
     (for file in `git diff --name-only --staged --diff-filter=M`; do
-        last_line=`git show HEAD:$file | wc -l`
+        local readonly last_line=`git show HEAD:$file | wc -l`
 
         # Hunk format: @@ -del[,line_count] +add[,line_count] @@
         (git diff --staged -U0 $file | grep -E '^@@ ') | while read hunk; do
-            range=(`hunk_range $hunk`)
+            local range=(`hunk_range $hunk`)
 
             # Check for appended lines which cannot be blamed.
             if [[ $range[2] -le $last_line ]]; then
@@ -83,7 +83,7 @@ list_all_candidates() {
     cd "`git rev-parse --show-toplevel`"
 
     # Only take file candidates into account if no line candidates are found.
-    l_candidates=`line_candidates`
+    local readonly l_candidates=`line_candidates`
     ((if [[ ! -z $l_candidates ]]; then
          echo $l_candidates
      else
