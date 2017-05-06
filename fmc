@@ -69,8 +69,8 @@ file_candidates() {
 # Output a formatted log of the match type and commit info.
 print_candidate() {
     # Abbreviate the commit hash to its minimal required length.
-    unique_len=`git rev-parse --short HEAD | awk '{print length}'`
-    git --no-pager log --format="%h |$1| %s - %an" --abbrev=$unique_len -n 1 $2
+    local readonly len=`git rev-parse --short HEAD | awk '{print length}'`
+    git --no-pager log --format="%h |$1| %s - %an" --abbrev=$len -n 1 $2
 }
 
 # List all candidate commits.
