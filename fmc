@@ -48,10 +48,10 @@ line_candidates() {
             # Check for appended lines which cannot be blamed.
             if [[ $range[2] -le $last_line ]]; then
                 range="$range[1],$range[2]"
-                git blame -s -b --no-progress -L $range `rev_range` -- "$file"
+                git blame -s -b --no-progress -L $range `rev_range` -- $file
             elif [[ $range[1] -le $last_line ]]; then
                 range="$range[1],$last_line"
-                git blame -s -b --no-progress -L $range `rev_range` -- "$file"
+                git blame -s -b --no-progress -L $range `rev_range` -- $file
             fi
         done
         # Get the commit hash and prefix the line with 'L '.
@@ -62,7 +62,7 @@ line_candidates() {
 file_candidates() {
     # Iterate files which have been modified.
     (for file in `git diff --name-only --staged --diff-filter=M`; do
-        git rev-list -n 4 -E `rev_range` -- "$file"
+        git rev-list -n 4 -E `rev_range` -- $file
     done) | sed 's/^/F /'
 }
 
