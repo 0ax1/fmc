@@ -1,6 +1,7 @@
 # fmc
 
-**F**ind **m**atching **c**ommits for staged changes in a Git repository.
+**F**ind **m**atching **c**ommits in the Git history that match currently staged 
+changes in a repository to create a fixup commit.
 
 In case the current branch is not `master`, the inspected range is given by the
 common ancestor with `master` and the current branch's `HEAD`. Otherwise, all
