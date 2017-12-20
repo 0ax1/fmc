@@ -35,7 +35,7 @@ hunk_range() {
     fi
 }
 
-# List the four latest unique matching commits prefixed with 'L '.
+# List line matching commits prefixed with 'L '.
 line_candidates() {
     # Iterate files which have been modified.
     (for file in `git diff --name-only --staged --diff-filter=M`; do
@@ -60,7 +60,7 @@ line_candidates() {
     done) | grep -oE '^[a-z0-9]*' | sed 's/^/L /'
 }
 
-# List the four latest matching commits modifying the files prefixed with 'F '.
+# List file matching commits prefixed with 'F '.
 file_candidates() {
     # Iterate files which have been modified.
     (for file in `git diff --name-only --staged --diff-filter=M`; do
@@ -75,7 +75,7 @@ print_candidate() {
     git --no-pager log --format="%h |$1| %s - %an" --abbrev=$len -n 1 $2
 }
 
-# List all candidate commits.
+# List the most recent unique candidate commits (limited to 4).
 list_all_candidates() {
     if git diff --cached --quiet; then
         echo 'No staged changes.' >&2
