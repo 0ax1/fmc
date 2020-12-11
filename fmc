@@ -1,12 +1,12 @@
 #!/usr/bin/env zsh
 # fmc: https://github.com/0ax1/fmc
 
-# Echo the revision range to inspect. In case the current branch is not master,
-# the range is given by the common ancestor with master and the current branch's
-# HEAD. Otherwise, all commits of master are taken into account.
+# Echo the revision range to inspect. In case the current branch is not main,
+# the range is given by the common ancestor with main and the current branch's
+# HEAD. Otherwise, all commits of main are taken into account.
 rev_range() {
-    if [[ `git rev-parse --abbrev-ref HEAD` != "master" ]]; then
-        echo "`git merge-base HEAD master`..HEAD"
+    if [[ `git rev-parse --abbrev-ref HEAD` != "main" ]]; then
+        echo "`git merge-base HEAD main`..HEAD"
     else
         echo "HEAD"
     fi
