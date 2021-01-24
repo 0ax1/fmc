@@ -5,9 +5,9 @@
 # the range is given by the common ancestor with main and the current branch's
 # HEAD. Otherwise, all commits of main are taken into account.
 rev_range() {
-    if [[ `git rev-parse --abbrev-ref HEAD` != "main" ]]; then
+    if [[ ! -z "`git branch --list main`" && `git rev-parse --abbrev-ref HEAD` != "main" ]]; then
         echo "`git merge-base HEAD main`..HEAD"
-    elif [[ `git rev-parse --abbrev-ref HEAD` != "master" ]]; then
+    elif [[ ! -z "`git branch --list master`" && `git rev-parse --abbrev-ref HEAD` != "master" ]]; then
         echo "`git merge-base HEAD master`..HEAD"
     else
         echo "HEAD"
