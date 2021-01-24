@@ -7,6 +7,8 @@
 rev_range() {
     if [[ `git rev-parse --abbrev-ref HEAD` != "main" ]]; then
         echo "`git merge-base HEAD main`..HEAD"
+    elif [[ `git rev-parse --abbrev-ref HEAD` != "master" ]]; then
+        echo "`git merge-base HEAD master`..HEAD"
     else
         echo "HEAD"
     fi
