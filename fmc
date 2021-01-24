@@ -1,4 +1,6 @@
 #!/usr/bin/env zsh
+set -euo pipefail
+
 # fmc: https://github.com/0ax1/fmc
 
 # Echo the revision range to inspect. In case the current branch is not main,
