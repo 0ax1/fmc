@@ -7,10 +7,23 @@ set -euo pipefail
 # the range is given by the common ancestor with main and the current branch's
 # HEAD. Otherwise, all commits of main are taken into account.
 rev_range() {
-    if [[ ! -z "`git branch --list main`" && `git rev-parse --abbrev-ref HEAD` != "main" ]]; then
-        echo "`git merge-base HEAD main`..HEAD"
-    elif [[ ! -z "`git branch --list master`" && `git rev-parse --abbrev-ref HEAD` != "master" ]]; then
-        echo "`git merge-base HEAD master`..HEAD"
+    current_branch=`git rev-parse --abbrev-ref HEAD`
+
+    # Exit in case no additional commits on top of the reference branch have been made.
+    check_commits_on_top() {
+        if [[ $1 == `git rev-parse HEAD` ]]; then
+            exit 1
+        fi
+    }
+
+    if [[ ! -z `git branch --list main` && $current_branch != "main" ]]; then
+        merge_base=`git merge-base HEAD main`
+        check_commits_on_top $merge_base "main"
+        echo "$merge_base..HEAD"
+    elif [[ ! -z `git branch --list master` && $current_branch != "master" ]]; then
+        merge_base=`git merge-base HEAD master`
+        check_commits_on_top $merge_base "master"
+        echo "$merge_base..HEAD"
     else
         echo "HEAD"
     fi
@@ -18,6 +31,8 @@ rev_range() {
 
 # List line matching commits prefixed with 'L '.
 line_candidates() {
+    range=`rev_range`
+
     # Iterate files which have been modified.
     (for file in `git diff --name-only --staged --diff-filter=M`; do
         local readonly last_line=`git show HEAD:$file | wc -l`
@@ -26,9 +41,9 @@ line_candidates() {
         (git diff --staged -U0 $file | grep -oE "@@ [+,-][0-9]+" | sed 's/[^0-9]*//g') | while read line; do
             # Check for appended lines which cannot be blamed.
             if [[ $line -le $last_line ]]; then
-                git blame -s -b --root --no-progress -L "$line,$line" `rev_range` -- $file
+                git blame -s -b --root --no-progress -L "$line,$line" $range -- $file
             else
-                git blame -s -b --root --no-progress -L "$last_line,$last_line" `rev_range` -- $file
+                git blame -s -b --root --no-progress -L "$last_line,$last_line" $range -- $file
             fi
         done
     # Get the commit hash and prefix the line with 'L '.
@@ -37,9 +52,11 @@ line_candidates() {
 
 # List file matching commits prefixed with 'F '.
 file_candidates() {
+    range=`rev_range`
+
     # Iterate files which have been modified.
     (for file in `git diff --name-only --staged --diff-filter=M`; do
-        git rev-list -n 4 -E `rev_range` -- $file
+        git rev-list -n 4 -E $range -- $file
     done) | sed 's/^/F /'
 }
 
