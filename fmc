@@ -31,8 +31,8 @@ line_candidates() {
                 git blame -s -b --root --no-progress -L "$last_line,$last_line" `rev_range` -- $file
             fi
         done
-        # Get the commit hash and prefix the line with 'L '.
-    done) | cut -d " " -f1 | sed 's/^/L /'
+    # Get the commit hash and prefix the line with 'L '.
+    done) | cut -d " " -f1 | sed 's/^/L /' | grep -oE 'L [0-9a-f]+'
 }
 
 # List file matching commits prefixed with 'F '.
