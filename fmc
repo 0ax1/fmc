@@ -50,12 +50,10 @@ line_candidates() {
             # Check for appended lines which cannot be blamed.
             if [[ $range[2] -le $last_line ]]; then
                 range="$range[1],$range[2]"
-                git blame -s -b --root --no-progress -L $range `rev_range` \
-                    -- $file
+                git blame -s -b --root --no-progress -L $range `rev_range` -- $file
             elif [[ $range[1] -le $last_line ]]; then
                 range="$range[1],$last_line"
-                git blame -s -b --root --no-progress -L $range `rev_range` \
-                    -- $file
+                git blame -s -b --root --no-progress -L $range `rev_range` -- $file
             fi
         done
         # Get the commit hash and prefix the line with 'L '.
