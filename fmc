@@ -14,29 +14,6 @@ rev_range() {
     fi
 }
 
-# Echo the hunk range in the format: [start-line, end-line].
-hunk_range() {
-    # Hunk format: @@ -del[,line_count] +add[,line_count] @@
-    local preprocess() { echo $1 | grep -oE '[,0-9]*' }
-    local readonly first_lines=(`preprocess $1 | sed 's/,[0-9]*//g'`)
-    local last_lines=(`preprocess $1 | sed 's/,/\+/g'`)
-
-    for i (1 2); do
-        # Calculate last line as (start + count - 1).
-        (( last_lines[i] = last_lines[i] ))
-        # Check if the line count was zero or empty.
-        if [[ $last_lines[$i] -gt $first_lines[$i] ]]; then
-            (( last_lines[i] -= 1 ))
-        fi
-    done
-
-    if [[ $last_lines[1] -gt $last_lines[2] ]]; then
-        echo "$first_lines[1] $last_lines[1]"
-    else
-        echo "$first_lines[2] $last_lines[2]"
-    fi
-}
-
 # List line matching commits prefixed with 'L '.
 line_candidates() {
     # Iterate files which have been modified.
@@ -44,20 +21,16 @@ line_candidates() {
         local readonly last_line=`git show HEAD:$file | wc -l`
 
         # Hunk format: @@ -del[,line_count] +add[,line_count] @@
-        (git diff --staged -U0 $file | grep -E '^@@ ') | while read hunk; do
-            local range=(`hunk_range $hunk`)
-
+        (git diff --staged -U0 $file | grep -oE "@@ [+,-][0-9]+" | sed 's/[^0-9]*//g') | while read line; do
             # Check for appended lines which cannot be blamed.
-            if [[ $range[2] -le $last_line ]]; then
-                range="$range[1],$range[2]"
-                git blame -s -b --root --no-progress -L $range `rev_range` -- $file
-            elif [[ $range[1] -le $last_line ]]; then
-                range="$range[1],$last_line"
-                git blame -s -b --root --no-progress -L $range `rev_range` -- $file
+            if [[ $line -le $last_line ]]; then
+                git blame -s -b --root --no-progress -L "$line,$line" `rev_range` -- $file
+            else
+                git blame -s -b --root --no-progress -L "$last_line,$last_line" `rev_range` -- $file
             fi
         done
         # Get the commit hash and prefix the line with 'L '.
-    done) | grep -oE '^[a-z0-9]*' | sed 's/^/L /'
+    done) | cut -d " " -f1 | sed 's/^/L /'
 }
 
 # List file matching commits prefixed with 'F '.
