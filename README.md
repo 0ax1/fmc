@@ -1,11 +1,11 @@
 # fmc
 
-**F**ind **m**atching **c**ommits in the Git history that match currently staged 
+**F**ind **m**atching **c**ommits in the Git history that match currently staged
 changes in a repository to create a fixup commit.
 
-In case the current branch is not `master`, the inspected range is given by the
-common ancestor with `master` and the current branch's `HEAD`. Otherwise, all
-commits of `master` are taken into account. In case no line candidates are
+In case the current branch is not `main`, the inspected range is given by the
+common ancestor with `main` and the current branch's `HEAD`. Otherwise, all
+commits of `main` are taken into account. In case no line candidates are
 found, the latest commits modifying the files are returned. The number of listed
 commits is limited to four.
 
